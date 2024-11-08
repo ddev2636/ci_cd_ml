@@ -12,9 +12,9 @@ jobs:
     strategy:
       fail-fast: false
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v3 # Corrected syntax for checkout
       - name: Set up Python 3.10
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v3 # Corrected syntax for setup-python
         with:
           python-version: "3.10"
 
@@ -25,7 +25,7 @@ jobs:
         run: python src/train_pipeline.py
 
       - name: Upload Trained Pipeline
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v3 # Corrected syntax for upload-artifact
         with:
           name: my-trained-pipeline
           path: src/trained_models/*.pkl
@@ -37,14 +37,14 @@ jobs:
     strategy:
       fail-fast: false
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v3 # Corrected syntax
       - name: Set up Python 3.10
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v3 # Corrected syntax
         with:
           python-version: "3.10"
 
       - name: Download Trained Pipeline
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v3 # Corrected syntax
         with:
           name: my-trained-pipeline
           path: src/trained_models
@@ -61,14 +61,14 @@ jobs:
     strategy:
       fail-fast: false
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v3 # Corrected syntax
       - name: Set up Python 3.10
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v3 # Corrected syntax
         with:
           python-version: "3.10"
 
       - name: Download Trained Pipeline
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v3 # Corrected syntax
         with:
           name: my-trained-pipeline
           path: src/trained_models
@@ -80,4 +80,40 @@ jobs:
         run: python -m build
 
       - name: Upload Build Package
-        uses: actions/upload-artifact
+        uses: actions/upload-artifact@v3 # Corrected syntax
+        with:
+          name: my-build-package
+          path: dist/*.whl
+          retention-days: 1
+
+  push-image:
+    needs: [train, test, build]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Repo Checkout
+        uses: actions/checkout@v3 # Corrected syntax
+
+      - name: Download Build Package
+        uses: actions/download-artifact@v3 # Corrected syntax
+        with:
+          name: my-build-package
+          path: src_api
+
+      - name: Login to Docker Hub
+        env:
+          DOCKER_USER: ${{ secrets.DOCKER_USER_NAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASS_TOKEN }}
+        run: echo $DOCKER_PASSWORD | docker login -u $DOCKER_USER --password-stdin
+
+      - name: Build Docker Image for FastAPI App
+        env:
+          DOCKER_USER: ${{ secrets.DOCKER_USER_NAME }}
+        run: docker build . -f Dockerfile -t $DOCKER_USER/lac-fastapi:latest
+
+      - name: Push Docker Image
+        env:
+          DOCKER_USER: ${{ secrets.DOCKER_USER_NAME }}
+        run: docker push $DOCKER_USER/lac-fastapi
+
+      - name: Logout from Docker Hub
+        run: docker logout
