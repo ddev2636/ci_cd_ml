@@ -7,9 +7,9 @@ from setuptools import find_packages, setup
 
 # Package meta-data.
 NAME = 'loan_approval_classifier_model'
-DESCRIPTION = "Loan Aproval classification model package "
-EMAIL = "------"
-AUTHOR = "Praveen Kumar Anwla"
+DESCRIPTION = "Loan Approval classification model package "
+EMAIL = "ddev2636@gmail.com"
+AUTHOR = "Debaditya Arnab"
 REQUIRES_PYTHON = ">=3.7.0"
 
 
