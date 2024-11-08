@@ -8,7 +8,7 @@ on:
 
 jobs:
   deploy:
-    runs-on: self-hosted # will run on EC2 Instance now.
+    runs-on: self-hosted
 
     steps:
       - name: Pull Docker Image
