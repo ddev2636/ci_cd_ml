@@ -1,5 +1,5 @@
-#
 name: Continuous Integration Pipeline
+
 on:
   push:
     branches:
@@ -12,20 +12,24 @@ jobs:
     strategy:
       fail-fast: false
     steps:
-    - uses: actions/checkout@v3
-    - name: Set up Python 3.10
-      uses: actions/setup-python@v3
-      with:
-        python-version: '3.10'
-    - name: Install dependencies
-      run: pip install -r requirements/requirements.txt
-    - name: Train and save pipeline
-      run: python src/train_pipeline.py
-    - uses: actions/upload-artifact@v2
-      with:
-        name: my-trained-pipeline
-        path: src/trained_models/*.pkl
-        retention-days: 1
+      - uses: actions/checkout@v3
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v3
+        with:
+          python-version: "3.10"
+
+      - name: Install dependencies
+        run: pip install -r requirements/requirements.txt
+
+      - name: Train and save pipeline
+        run: python src/train_pipeline.py
+
+      - name: Upload Trained Pipeline
+        uses: actions/upload-artifact@v3
+        with:
+          name: my-trained-pipeline
+          path: src/trained_models/*.pkl
+          retention-days: 1
 
   test:
     needs: train
@@ -33,19 +37,23 @@ jobs:
     strategy:
       fail-fast: false
     steps:
-    - uses: actions/checkout@v3
-    - name: Set up Python 3.10
-      uses: actions/setup-python@v3
-      with:
-        python-version: '3.10'
-    - uses: actions/download-artifact@v2
-      with:
-        name: my-trained-pipeline
-        path: src/trained_models
-    - name: Install dependencies
-      run: pip install -r requirements/test_requirements.txt
-    - name: Test with pytest
-      run: pytest
+      - uses: actions/checkout@v3
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v3
+        with:
+          python-version: "3.10"
+
+      - name: Download Trained Pipeline
+        uses: actions/download-artifact@v3
+        with:
+          name: my-trained-pipeline
+          path: src/trained_models
+
+      - name: Install test dependencies
+        run: pip install -r requirements/test_requirements.txt
+
+      - name: Test with pytest
+        run: pytest
 
   build:
     needs: [train, test]
@@ -53,54 +61,23 @@ jobs:
     strategy:
       fail-fast: false
     steps:
-    - uses: actions/checkout@v3
-    - name: Set up Python 3.10
-      uses: actions/setup-python@v3
-      with:
-        python-version: '3.10'
-    - uses: actions/download-artifact@v2
-      with:
-        name: my-trained-pipeline
-        path: src/trained_models
-    - name: Install dependencies
-      run: pip install --upgrade build
-    - name: Build package
-      run: python -m build
-    - uses: actions/upload-artifact@v2
-      with:
-        name: my-build-package
-        path: dist/*.whl
-        retention-days: 1
+      - uses: actions/checkout@v3
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v3
+        with:
+          python-version: "3.10"
 
-  push-image:
-    needs: [train, test, build]
-    runs-on: ubuntu-latest
-    steps:
-    - name: Repo Checkout
-      uses: actions/checkout@v3
+      - name: Download Trained Pipeline
+        uses: actions/download-artifact@v3
+        with:
+          name: my-trained-pipeline
+          path: src/trained_models
 
-    - uses: actions/download-artifact@v2
-      with:
-        name: my-build-package
-        path: src_api
+      - name: Install build dependencies
+        run: pip install --upgrade build
 
-    - name: Login to Docker hub
-      env:
-        DOCKER_USER: ${{secrets.DOCKER_USER_NAME }}
-        DOCKER_PASSWORD: ${{secrets.DOCKER_PASS_TOKEN }}
-      run: docker login -u $DOCKER_USER -p $DOCKER_PASSWORD 
+      - name: Build package
+        run: python -m build
 
-    - name: Build the Docker image for Fastapi app
-      env:
-        DOCKER_USER: ${{ secrets.DOCKER_USER_NAME }}
-      run: docker build . -f Dockerfile -t $DOCKER_USER/lac-fastapi:latest
-
-    - name: Push the Docker Image
-      env:
-        DOCKER_USER: ${{secrets.DOCKER_USER_NAME }}
-      run: docker push $DOCKER_USER/lac-fastapi
-
-    - name: Logout to Docker hub
-      run: docker logout
-
-      
+      - name: Upload Build Package
+        uses: actions/upload-artifact
