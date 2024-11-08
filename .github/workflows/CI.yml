@@ -91,13 +91,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Repo Checkout
-        uses: actions/checkout@v3 # Corrected syntax
+        uses: actions/checkout@v3
 
       - name: Download Build Package
-        uses: actions/download-artifact@v3 # Corrected syntax
+        uses: actions/download-artifact@v3
         with:
           name: my-build-package
-          path: src_api
+          path: dist # Save the .whl file in the `dist` folder
 
       - name: Login to Docker Hub
         env:

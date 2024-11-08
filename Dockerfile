@@ -4,13 +4,16 @@ FROM python:3.10
 # Copy application files
 ADD /src_api /src_api/
 
+# Copy the .whl file from dist to /src_api/
+COPY dist/ /src_api/dist/
+
 # Specify working directory
 WORKDIR /src_api
 
 # Update pip
 RUN pip install --upgrade pip
 
-# Install dependencies
+# Install dependencies (including the .whl file)
 RUN pip install -r requirements.txt
 
 # Expose port for application
